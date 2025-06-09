@@ -1,0 +1,36 @@
+name: Notify Webhook on Version Update
+
+on:
+  push:
+    paths:
+      - 'version.json'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install jq (to parse JSON)
+        run: sudo apt-get install jq
+
+      - name: Read version.json
+        id: version
+        run: |
+          apk_url=$(jq -r '.apk_url' version.json)
+          version=$(jq -r '.version' version.json)
+          changelog=$(jq -r '.changelog' version.json)
+          echo "apk_url=$apk_url" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "changelog=$changelog" >> $GITHUB_OUTPUT
+
+      - name: Send payload to webhook.site
+        run: |
+          curl -X POST https://webhook.site/4935133b-d385-4a9a-ab0d-0f477e63c7ce \
+            -H "Content-Type: application/json" \
+            -d '{
+              "version": "${{ steps.version.outputs.version }}",
+              "apk_url": "${{ steps.version.outputs.apk_url }}",
+              "changelog": "${{ steps.version.outputs.changelog }}"
+            }'
