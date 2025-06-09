@@ -12,18 +12,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install jq (to parse JSON)
+      - name: Install jq
         run: sudo apt-get install jq
 
       - name: Read version.json
         id: version
         run: |
-          apk_url=$(jq -r '.apk_url' version.json)
+          download_link=$(jq -r '.apk_url' version.json)
           version=$(jq -r '.version' version.json)
           changelog=$(jq -r '.changelog' version.json)
-          echo "apk_url=$apk_url" >> $GITHUB_OUTPUT
+          message="Dear e& PTT customer, a new app version has been released, please download the new apk file using this link: $download_link"
+          echo "download_link=$download_link" >> $GITHUB_OUTPUT
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "changelog=$changelog" >> $GITHUB_OUTPUT
+          echo "message=$message" >> $GITHUB_OUTPUT
 
       - name: Send payload to webhook.site
         run: |
@@ -31,6 +33,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "version": "${{ steps.version.outputs.version }}",
-              "apk_url": "${{ steps.version.outputs.apk_url }}",
-              "changelog": "${{ steps.version.outputs.changelog }}"
+              "download_link": "${{ steps.version.outputs.download_link }}",
+              "changelog": "${{ steps.version.outputs.changelog }}",
+              "message": "${{ steps.version.outputs.message }}"
             }'
