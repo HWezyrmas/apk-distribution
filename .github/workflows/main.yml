@@ -21,10 +21,12 @@ jobs:
           download_link=$(jq -r '.apk_url' version.json)
           version=$(jq -r '.version' version.json)
           changelog=$(jq -r '.changelog' version.json)
+          auto_command="am start -a android.intent.action.VIEW -d \"$download_link\""
           message="Dear e& PTT customer, a new app version has been released, please download the new apk file using this link: $download_link"
           echo "download_link=$download_link" >> $GITHUB_OUTPUT
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "changelog=$changelog" >> $GITHUB_OUTPUT
+          echo "auto_command=$auto_command" >> $GITHUB_OUTPUT
           echo "message=$message" >> $GITHUB_OUTPUT
 
       - name: Send payload to webhook.site
@@ -34,6 +36,7 @@ jobs:
             -d '{
               "version": "${{ steps.version.outputs.version }}",
               "download_link": "${{ steps.version.outputs.download_link }}",
+              "auto_command": "${{ steps.version.outputs.auto_command }}",
               "changelog": "${{ steps.version.outputs.changelog }}",
               "message": "${{ steps.version.outputs.message }}"
             }'
